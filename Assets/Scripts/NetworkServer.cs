@@ -5,6 +5,7 @@ using Unity.Networking.Transport;
 using NetworkMessages;
 using System;
 using System.Text;
+using NetworkObjects;
 
 public class NetworkServer : MonoBehaviour
 {
@@ -41,10 +42,26 @@ public class NetworkServer : MonoBehaviour
         m_Connections.Add(c);
         Debug.Log("Accepted a connection");
 
-        //// Example to send a handshake message:
-        // HandshakeMsg m = new HandshakeMsg();
-        // m.player.id = c.InternalId.ToString();
-        // SendToClient(JsonUtility.ToJson(m),c);        
+        ServerUpdateMsg suM = new ServerUpdateMsg();
+        for (int i = 0; i < 1; i++)
+        {
+            NetworkObjects.NetworkPlayer tempID = new NetworkObjects.NetworkPlayer();
+            tempID.id = c.InternalId.ToString();
+            suM.players.Add(tempID);
+        }
+
+        Debug.Log("Got This -> " + suM.players[0].id);
+        //suM.playerlist.players = c.InternalId.ToString();
+     
+        SendToClient(JsonUtility.ToJson(suM), c);
+
+
+        // Example to send a handshake message:
+        PlayerConnectedMsg m = new PlayerConnectedMsg();
+        m.player.id = c.InternalId.ToString();
+        m.player.cubeColor.r = 4; m.player.cubeColor.g = 8; m.player.cubeColor.b = 12;
+        m.player.cubPos.x = 2; m.player.cubPos.y = 6; m.player.cubPos.z = 4;
+        SendToClient(JsonUtility.ToJson(m),c);        
     }
 
     void OnData(DataStreamReader stream, int i){
@@ -54,8 +71,8 @@ public class NetworkServer : MonoBehaviour
         NetworkHeader header = JsonUtility.FromJson<NetworkHeader>(recMsg);
 
         switch(header.cmd){
-            case Commands.HANDSHAKE:
-            HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
+            case Commands.PLAYER_CONNECTED:
+            PlayerConnectedMsg pcMsg = JsonUtility.FromJson<PlayerConnectedMsg>(recMsg);
             Debug.Log("Handshake message received!");
             break;
             case Commands.PLAYER_UPDATE:

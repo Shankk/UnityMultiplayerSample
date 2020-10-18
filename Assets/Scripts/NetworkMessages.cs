@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using NetworkObjects;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace NetworkMessages
@@ -7,7 +9,7 @@ namespace NetworkMessages
     public enum Commands{
         PLAYER_UPDATE,
         SERVER_UPDATE,
-        HANDSHAKE,
+        PLAYER_CONNECTED,
         PLAYER_INPUT
     }
 
@@ -17,11 +19,12 @@ namespace NetworkMessages
     }
 
     [System.Serializable]
-    public class HandshakeMsg:NetworkHeader{
+    public class PlayerConnectedMsg:NetworkHeader{
         public NetworkObjects.NetworkPlayer player;
-        public HandshakeMsg(){      // Constructor
-            cmd = Commands.HANDSHAKE;
+        public PlayerConnectedMsg(){      // Constructor
+            cmd = Commands.PLAYER_CONNECTED;
             player = new NetworkObjects.NetworkPlayer();
+            //players = new NetworkObjects.ListOfNetworkPlayers();
         }
     }
     
@@ -44,6 +47,7 @@ namespace NetworkMessages
     [System.Serializable]
     public class  ServerUpdateMsg:NetworkHeader{
         public List<NetworkObjects.NetworkPlayer> players;
+        
         public ServerUpdateMsg(){      // Constructor
             cmd = Commands.SERVER_UPDATE;
             players = new List<NetworkObjects.NetworkPlayer>();
@@ -64,6 +68,17 @@ namespace NetworkObjects
 
         public NetworkPlayer(){
             cubeColor = new Color();
+            cubPos = new Vector3();
+        }
+    }
+    [System.Serializable]
+    public class ListOfNetworkPlayers : NetworkObject
+    {
+        public NetworkObject[] players;
+
+        public ListOfNetworkPlayers()
+        {
+            players = new NetworkObject[0];
         }
     }
 }
