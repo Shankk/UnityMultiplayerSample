@@ -199,13 +199,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 177472643}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.00008291006, y: 0.89060843, z: 0.017388761}
+  m_LocalRotation: {x: 0.2588191, y: 0, z: 0, w: 0.9659258}
+  m_LocalPosition: {x: 0, y: 3, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 30, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,8 +349,60 @@ MonoBehaviour:
   newPlayers: []
   droppedPlayers: []
   lastestGameState:
-    pktID: 0
-    players: []
+    cmd: 4
+    NWPlayers:
+      id: 
+      cubeColor: {r: 0, g: 0, b: 0, a: 0}
+      cubPos: {x: 0, y: 0, z: 0}
+      players:
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
+      - id: 
+        cubeColor: {r: 0, g: 0, b: 0, a: 0}
+        cubPos: {x: 0, y: 0, z: 0}
   initialSetofPlayers:
     cmd: 1
     players: []

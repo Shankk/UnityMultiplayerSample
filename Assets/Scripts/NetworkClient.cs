@@ -20,9 +20,9 @@ public class NetworkClient : MonoBehaviour
     public string myAddress; // my address = (IP, PORT)
     public Dictionary<string, GameObject> currentPlayers; // A list of currently connected players
     public List<string> newPlayers, droppedPlayers; // a list of new players, and a list of dropped players
-    public GameState lastestGameState; // the last game state received from server
+    public GameStateMsg lastestGameState; // the last game state received from server
     public ServerUpdateMsg initialSetofPlayers; // initial set of players to spawn
-
+    
     void Start ()
     {
         // Initialize variables
@@ -49,9 +49,9 @@ public class NetworkClient : MonoBehaviour
         Debug.Log("We are now connected to the server");
 
         //Example to send a handshake message:
-         PlayerConnectedMsg m = new PlayerConnectedMsg();
-         m.player.id = m_Connection.InternalId.ToString();
-         SendToServer(JsonUtility.ToJson(m));
+         //ConnectionApprovedMsg m = new ConnectionApprovedMsg();
+         //m.player.id = m_Connection.InternalId.ToString();
+         //SendToServer(JsonUtility.ToJson(m));
     }
 
     void SpawnPlayers()
@@ -62,6 +62,7 @@ public class NetworkClient : MonoBehaviour
             {
                 currentPlayers.Add(playerID, Instantiate(playerGO, new Vector3(0, 0, 0), Quaternion.identity));
                 currentPlayers[playerID].name = playerID;
+                Debug.Log("Recieved: " + playerID + "My Address: " + myAddress);
                 if (playerID == myAddress)
                 {
                     currentPlayers[playerID].AddComponent<PlayerController>();
@@ -71,20 +72,69 @@ public class NetworkClient : MonoBehaviour
         }
         if (initialSetofPlayers.players.Count > 0)
         {
-            Debug.Log(initialSetofPlayers);
+           
             foreach (NetworkObjects.NetworkPlayer player in initialSetofPlayers.players)
             {
+                Debug.Log("Current Players: " + player.id + " Our InternalID: " + myAddress);
                 if (player.id == myAddress)
                     continue;
+               
                 currentPlayers.Add(player.id, Instantiate(playerGO, new Vector3(0, 0, 0), Quaternion.identity));
                 currentPlayers[player.id].GetComponent<Renderer>().material.color = new Color(player.cubeColor.r, player.cubeColor.g, player.cubeColor.b);
                 currentPlayers[player.id].name = player.id;
-
+                
             }
             initialSetofPlayers.players = new List<NetworkObjects.NetworkPlayer>();
         }
+    }
 
+    void UpdatePlayers()
+    {
+        if (lastestGameState.GameState.Count > 0)
+        {
+            foreach (NetworkObjects.NetworkPlayer player in lastestGameState.GameState)
+            {
+                string playerID = player.id;
+                Debug.Log("Game State ID: " + player.id + " Our InternalID: " + myAddress);
+                //currentPlayers[player.id].GetComponent<Renderer>().material.color = new Color(player.cubeColor.r, player.cubeColor.g, player.cubeColor.b);
+                if (player.id != myAddress)
+                {
+                    Debug.Log("Setting Position of random ass player");
+                    currentPlayers[player.id].GetComponent<Transform>().position = new Vector3(player.cubPos.x, player.cubPos.y, player.cubPos.z);
+                }
+            }
+            foreach (NetworkObjects.NetworkPlayer player in lastestGameState.GameState)
+            {
+                if (player.id == myAddress)
+                {
+                    Debug.Log("Yeeting my position to the server");
+                    PlayerUpdateMsg playerData = new PlayerUpdateMsg();
+                    //playerData.player.pulse = DateTime.Now;
+                    playerData.player.id = player.id;
+                    playerData.player.cubPos.x = currentPlayers[player.id].GetComponent<Transform>().position.x;
+                    playerData.player.cubPos.y = currentPlayers[player.id].GetComponent<Transform>().position.y;
+                    playerData.player.cubPos.z = currentPlayers[player.id].GetComponent<Transform>().position.z;
+                    SendToServer(JsonUtility.ToJson(playerData));
 
+                }
+            }
+            lastestGameState.GameState = new List<NetworkObjects.NetworkPlayer>();
+        }
+    }
+
+    void DestroyPlayers()
+    {
+        if (droppedPlayers.Count > 0)
+        {
+            foreach (string playerID in droppedPlayers)
+            {
+                //Debug.Log(playerID);
+                //Debug.Log(currentPlayers[playerID]);
+                Destroy(currentPlayers[playerID].gameObject);
+                currentPlayers.Remove(playerID);
+            }
+            droppedPlayers.Clear();
+        }
     }
 
     void OnData(DataStreamReader stream){
@@ -94,47 +144,78 @@ public class NetworkClient : MonoBehaviour
         NetworkHeader header = JsonUtility.FromJson<NetworkHeader>(recMsg);
 
         switch(header.cmd){
-            case Commands.PLAYER_CONNECTED:
+            case Commands.CONNECTION_APPROVED: // SELF
+            ConnectionApprovedMsg cpMsg = JsonUtility.FromJson<ConnectionApprovedMsg>(recMsg);
+            Debug.Log("Connection Approved message received!");
+           
+            foreach(NetworkObjects.NetworkPlayer player in cpMsg.player)
+            {
+                Debug.Log("Our Internal ID: " + player.id);
+                Debug.Log("Color R: " + player.cubeColor.r + " Color G: " + player.cubeColor.g + " Color B: " + player.cubeColor.b);
+                Debug.Log("Pos X: " + player.cubPos.x + " Pos Y: " + player.cubPos.y + " Pos Z: " + player.cubPos.z);
+
+                newPlayers.Add(player.id);
+                myAddress = player.id;
+            }
+            break;
+            case Commands.PLAYER_CONNECTED: // Everyone else
             PlayerConnectedMsg pcMsg = JsonUtility.FromJson<PlayerConnectedMsg>(recMsg);
-            Debug.Log("Handshake message received!");
-            Debug.Log("Our Internal ID: " + pcMsg.player.id);
-            Debug.Log("Color R: " + pcMsg.player.cubeColor.r + " Color G: " + pcMsg.player.cubeColor.g + " Color B: " + pcMsg.player.cubeColor.b);
-            Debug.Log("Pos X: " + pcMsg.player.cubPos.x + " Pos Y: " + pcMsg.player.cubPos.y + " Pos Z: " + pcMsg.player.cubPos.z);
+            Debug.Log("Player Connected message received!");
 
-            newPlayers.Add(pcMsg.player.id);
-            myAddress = pcMsg.player.id;
+            foreach (NetworkObjects.NetworkPlayer player in pcMsg.player)
+            {
+                //Debug.Log("Our Internal ID: " + player.id);
+                //Debug.Log("Color R: " + player.cubeColor.r + " Color G: " + player.cubeColor.g + " Color B: " + player.cubeColor.b);
+                //Debug.Log("Pos X: " + player.cubPos.x + " Pos Y: " + player.cubPos.y + " Pos Z: " + player.cubPos.z);
 
+                newPlayers.Add(player.id);
+            }
+            break;
+            case Commands.PLAYER_DISCONNECTED:
+            PlayerDisconnectMsg pdMsg = JsonUtility.FromJson<PlayerDisconnectMsg>(recMsg);
+            Debug.Log("Player disconnect message received! User ID: " + pdMsg.player.id);
+            droppedPlayers.Add(pdMsg.player.id);
             break;
             case Commands.PLAYER_UPDATE:
             PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
             Debug.Log("Player update message received!");
             break;
-            case Commands.SERVER_UPDATE:
+            case Commands.GAMESTATE:
+            GameStateMsg gsMsg = JsonUtility.FromJson<GameStateMsg>(recMsg);
+            Debug.Log("Game State update message received!");
+            lastestGameState = gsMsg;
+            for(int i = 0; i < lastestGameState.GameState.Count; i++)
+            {
+                Debug.Log("Game State ID: " + lastestGameState.GameState[i].id + " RGB: " + lastestGameState.GameState[i].cubeColor + "Pos: " + lastestGameState.GameState[i].cubPos);
+            }
+            
+            
+            break;
+            case Commands.SERVER_UPDATE: // Gives The Player List Already In Server
             ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
             Debug.Log("Server update message received!");
-            Debug.Log("PlayerList: " + suMsg.players[0].id);
+            for(int i = 0; i < suMsg.players.Count; i++)
+            {
+                Debug.Log("PlayerList: " + suMsg.players[i].id);
+            }
+            
             initialSetofPlayers = suMsg;
             
-            //for (int i = 0; i < suMsg.players.Count; i++)
-            //{
-            //    initialSetofPlayers.players = new Player[i];
-            //    initialSetofPlayers.players[i].id = suMsg.players[i].id;
-            //}
-                //for (int i = 0; i < suMsg.playerlist.players.Length; i++)
-                //{
-                //    initialSetofPlayers.players[0].id = suMsg.playerlist.players[0].id;
-                //}
-                break;
+            break;
             default:
             Debug.Log("Unrecognized message received!");
             break;
         }
     }
+    void Disconnect()
+    {
+        PlayerDisconnectMsg pdMsg = new PlayerDisconnectMsg();
+        SendToServer(JsonUtility.ToJson(pdMsg));
 
-    void Disconnect(){
         m_Connection.Disconnect(m_Driver);
         m_Connection = default(NetworkConnection);
-        
+        Debug.Log("We got disconnected from server");
+      
     }
 
     void OnDisconnect(){
@@ -146,6 +227,7 @@ public class NetworkClient : MonoBehaviour
     {
         m_Driver.Dispose();
     }   
+
     void Update()
     {
         m_Driver.ScheduleUpdate().Complete();
@@ -177,48 +259,7 @@ public class NetworkClient : MonoBehaviour
         }
 
         SpawnPlayers();
-    }
-
-    [Serializable]
-    public struct receivedColor
-    {
-        public float R; public float G; public float B;
-    }
-    [Serializable]
-    public struct receivedPosition
-    {
-        public float X; public float Y; public float Z;
-    }
-    [Serializable]
-    public struct sentPosition
-    {
-        public float X; public float Y; public float Z;
-    }
-
-    [Serializable]
-    public class Player
-    {
-        public string id;
-        public receivedColor color;
-        public receivedPosition pos;
-
-    }
-
-    [Serializable]
-    public class ListOfPlayers
-    {
-        public Player[] players;
-
-        public ListOfPlayers()
-        {
-            players = new Player[0];
-        }
-    }
-
-    [Serializable]
-    public class GameState
-    {
-        public int pktID;
-        public Player[] players;
+        UpdatePlayers();
+        DestroyPlayers();
     }
 }
